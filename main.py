@@ -99,9 +99,9 @@ def string_to_time(course_time):    # '二1-2 三3-4'
     # some of weeks like: 1, 6
     elif re.findall("\d,\d?\d周", course_time):
 
-        part_week = re.findall("\d,\d周", course_time)
+        part_week = re.findall("\d,\d?\d周", course_time)
         week1 = re.findall("\d", part_week[0])[0]
-        week2 = re.findall("\d", part_week[0])[1]
+        week2 = re.findall("\d?\d", part_week[0])[1]
         available_weeks = [int(week1), int(week2)]
 
     # full ten weeks
