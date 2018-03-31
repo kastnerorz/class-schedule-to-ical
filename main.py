@@ -6,15 +6,13 @@ import json
 import re
 from bs4 import BeautifulSoup
 
-cal = Calendar()
-cal.add('prodid', '-//My calendar product//mxm.dk//')
-cal.add('version', '2.0')
+
 
 url = ['http://xk.shu.edu.cn:8080', 'http://xk.shu.edu.cn']
 url_index = url[0]
 username = '16122038'
 password = 'Dicos.123'
-
+start_date = datetime.datetime(2018,3,25,8,0)
 
 def login(session):
     url_captcha = url_index + '/Login/GetValidateCode?%20%20+%20GetTimestamp()'
@@ -55,6 +53,54 @@ def login(session):
         print(u'[登录失败]', Result[0])
         return False
 
+
+def display(cal):
+    return cal.to_ical().replace('\r\n', '\n').strip()
+
+def string_to_int(num):
+    if num == '一':
+        return 1
+    elif num == '二':
+        return 2
+    elif num == '三':
+        return 3
+    elif num == '四':
+        return 4
+    elif num == '五':
+        return 5
+
+def _to_time_start(string):
+    return datetime.time(8,0) + datetime.timedelta(minutes=45*(int(string) - 1))
+
+def string_to_time(course_time):
+    times = []
+    text_times = re.findall("[一|二|三|四|五|六|七|八|九|十][0-9]-[0-9]", course_time)
+
+    if re.findall("[0-9]-[0-9]周"):         # 4-10 week
+
+        return times
+    elif re.findall("[0-9],[0-9]周"):       # 4,6 week
+        return times
+    else:                                   # 1-10 week
+        for text_time in text_times:
+            day = re.findall("[一|二|三|四|五|六|七|八|九|十]", text_time)
+            times = re.findall("[0-9]", text_time)
+            time_start = int(times[0])
+            time_end = int(times[1])
+            init_date = start_date + datetime.timedelta(days=day[0], minutes=)
+
+            for i in range(10):
+                times.append(start_date + datetime.timedelta(day=))
+        return times
+class course:
+    id = 0
+    name = ''
+    teacher = ''
+    score = 0
+    time = ''
+    position = ''
+    campus = ''
+
 def main():
     headers = {'user-agent',
                'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
@@ -69,8 +115,21 @@ def main():
     course_req_result = req.post(url_index + '/StudentQuery/CtrlViewQueryCourseTable', course_req_post_data)
     print(course_req_result.text)
     soup = BeautifulSoup(course_req_result.text, "html.parser")
-    trs = soup.find_all('tr')
-    print(trs)
+    course_table = soup.table
+    course_trs = course_table.find_all('tr')
 
+
+    # init calendar
+    cal = Calendar()
+    cal.add('prodid', '-//My calendar product//mxm.dk//')
+    cal.add('version', '2.0')
+
+    # add events from courses
+    for i in range(2, len(course_trs) - 4):
+        tds = course_trs[i].find_all('td')
+
+        event = Event()
+        event.add('summary', tds[2])    # course name
+        event.add('')
 if __name__ == '__main__':
     main()
