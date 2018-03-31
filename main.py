@@ -11,8 +11,8 @@ import tempfile, os
 
 url = ['http://xk.shu.edu.cn:8080', 'http://xk.shu.edu.cn']
 url_index = url[0]
-username = '16122038'
-password = 'Dicos.123'
+username = ''
+password = ''
 year = 2018
 month = 3
 day = 25
