@@ -128,7 +128,7 @@ def main():
     # course_req_result = req.post(url_index + '/StudentQuery/CtrlViewQueryCourseTable', course_req_post_data)
     # print(course_req_result.text)
     # soup = BeautifulSoup(course_req_result.text, "html.parser")
-    with open('test.html', 'rb') as f:
+    with open('test.txt', 'rb') as f:
         data = f.read().decode('utf-8')
         soup = BeautifulSoup(data, "html.parser")
     course_table = soup.table
@@ -150,7 +150,8 @@ def main():
             event.add('dtend', time['end_time'])                    # course end time
             event.add('dtstamp', datetime.datetime.now())           # course edit time
             event['location'] = vText(tds[7].text.replace("\n", "").replace(" ", ""))                   # course location
-            event['uid'] = vText(tds[1].text.replace("\n", "").replace(" ", "") + tds[3].text.replace("\n", "").replace(" ", ""))               # course id + teacher id
+            event['uid'] = vText(tds[1].text.replace("\n", "").replace(" ", "") +
+                                 tds[3].text.replace("\n", "").replace(" ", ""))               # course id + teacher id
             cal.add_component(event)
     with open('test.ics', 'wb') as f:
         f.write(cal.to_ical())
