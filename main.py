@@ -94,20 +94,22 @@ def string_to_time(course_time):
         part_week = re.findall("\d,\d周", course_time)
         week1 = re.findall("\d", part_week[0])[0]
         week2 = re.findall("\d", part_week[0])[1]
-        available_weeks = [week1, week2]
+        available_weeks = [int(week1), int(week2)]
                                                         # 1-10 week
     for text_time in text_times:
         day = re.findall("[一|二|三|四|五|六|七|八|九|十]", text_time)
         times = re.findall("\d", text_time)
         time_start = int(times[0])
         time_end = int(times[1])
-
         for i in available_weeks:
+            # print(i, end='')
+            # print(type(i))
             course_times.append({
-                'start_time': term_start_date + datetime.timedelta(days=string_to_int(day[0]) + (i - 1) * 7,
+                'start_time': term_start_date + datetime.timedelta(days=string_to_int(day[0]),
+                                                                   weeks=i - 1,
                                                                    minutes=course_minutes[time_start - 1]),
                 'end_time': term_start_date + datetime.timedelta(days=string_to_int(day[0]) + (i - 1) * 7,
-                                                                 minutes=course_minutes[time_end + 45])
+                                                                 minutes=course_minutes[time_end] + 45)
             })
     return course_times
 
@@ -135,23 +137,22 @@ def main():
 
     # init calendar
     cal = Calendar()
-    cal.add('prodid', '-//My calendar product//mxm.dk//')
+    cal.add('prodid', 'class')
     cal.add('version', '2.0')
-
     # add events from courses
-    for i in range(3, len(course_trs) - 15):
+    for i in range(3, len(course_trs) - 1):
         tds = course_trs[i].find_all('td')
-        print(tds)
-        for time in string_to_time(tds[6]):
+        course_times = string_to_time(tds[6].text)
+        for time in course_times:
             event = Event()
-            event.add('summary', tds[2])                            # course name
+            event.add('summary', tds[2].text.replace("\n", "").replace(" ", ""))                            # course name
             event.add('dtstart', time['start_time'])                # course start time
             event.add('dtend', time['end_time'])                    # course end time
             event.add('dtstamp', datetime.datetime.now())           # course edit time
-            event.add['location'] = vText(tds[7])                   # course location
-            event.add['uid'] = vText(tds[1] + tds[3])               # course id + teacher id
+            event['location'] = vText(tds[7].text.replace("\n", "").replace(" ", ""))                   # course location
+            event['uid'] = vText(tds[1].text.replace("\n", "").replace(" ", "") + tds[3].text.replace("\n", "").replace(" ", ""))               # course id + teacher id
             cal.add_component(event)
-    print(cal)
-
+    with open('test.ics', 'wb') as f:
+        f.write(cal.to_ical())
 if __name__ == '__main__':
     main()
