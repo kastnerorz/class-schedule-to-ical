@@ -75,41 +75,48 @@ def string_to_int(num):
         return 5
 
 
-def string_to_time(course_time):
+def string_to_time(course_time):    # '二1-2 三3-4'
+    """
+
+    :param course_time: '二1-2'
+    :return: 十周或若干周的上课下课时间 [{start_time, end_time},...]
+
+    """
     course_times = []
     course_minutes = [0, 55, 120, 175, 250, 295, 370, 425, 480, 535, 600, 655, 710]
     available_weeks = range(1, 11)
-    text_times = re.findall("[一|二|三|四|五|六|七|八|九|十]\d?\d-\d?\d", course_time)
+    text_times = re.findall("[一|二|三|四|五|六|七|八|九|十]\d?\d-\d?\d", course_time)    # ['二1-2', '三3-4']
 
-    if re.findall("\d-\d周", course_time):         # 4-10 week
+    # part of weeks like: 4 - 6
+    if re.findall("\d-\d?\d周", course_time):
 
-        part_week = re.findall("\d-\d周", course_time)
-        weeks = re.findall("\d", part_week[0])
+        part_week = re.findall("\d-\d?\d周", course_time)
+        weeks = re.findall("\d\d*", part_week[0])
         start_week = int(weeks[0])
         end_week = int(weeks[1])
         available_weeks = range(start_week, end_week + 1)
 
-    elif re.findall("\d,\d周", course_time):       # 4,6 week
+    # some of weeks like: 1, 6
+    elif re.findall("\d,\d?\d周", course_time):
 
         part_week = re.findall("\d,\d周", course_time)
         week1 = re.findall("\d", part_week[0])[0]
         week2 = re.findall("\d", part_week[0])[1]
         available_weeks = [int(week1), int(week2)]
-                                                        # 1-10 week
+
+    # full ten weeks
     for text_time in text_times:
         day = re.findall("[一|二|三|四|五|六|七|八|九|十]", text_time)
-        times = re.findall("\d", text_time)
+        times = re.findall("\d\d*", text_time)
         time_start = int(times[0])
         time_end = int(times[1])
         for i in available_weeks:
-            # print(i, end='')
-            # print(type(i))
             course_times.append({
                 'start_time': term_start_date + datetime.timedelta(days=string_to_int(day[0]),
                                                                    weeks=i - 1,
                                                                    minutes=course_minutes[time_start - 1]),
                 'end_time': term_start_date + datetime.timedelta(days=string_to_int(day[0]) + (i - 1) * 7,
-                                                                 minutes=course_minutes[time_end] + 45)
+                                                                 minutes=course_minutes[time_end - 1] + 45)
             })
     return course_times
 
@@ -128,6 +135,8 @@ def main():
     # course_req_result = req.post(url_index + '/StudentQuery/CtrlViewQueryCourseTable', course_req_post_data)
     # print(course_req_result.text)
     # soup = BeautifulSoup(course_req_result.text, "html.parser")
+
+    # use local text
     with open('test.txt', 'rb') as f:
         data = f.read().decode('utf-8')
         soup = BeautifulSoup(data, "html.parser")
@@ -139,11 +148,12 @@ def main():
     cal = Calendar()
     cal.add('prodid', 'class')
     cal.add('version', '2.0')
+
     # add events from courses
     for i in range(3, len(course_trs) - 1):
         tds = course_trs[i].find_all('td')
         course_times = string_to_time(tds[6].text)
-        for time in course_times:
+        for index, time in enumerate(course_times):
             event = Event()
             event.add('summary', tds[2].text.replace("\n", "").replace(" ", ""))                            # course name
             event.add('dtstart', time['start_time'])                # course start time
@@ -151,9 +161,13 @@ def main():
             event.add('dtstamp', datetime.datetime.now())           # course edit time
             event['location'] = vText(tds[7].text.replace("\n", "").replace(" ", ""))                   # course location
             event['uid'] = vText(tds[1].text.replace("\n", "").replace(" ", "") +
-                                 tds[3].text.replace("\n", "").replace(" ", ""))               # course id + teacher id
+                                 tds[3].text.replace("\n", "").replace(" ", "") +
+                                 str(index))                      # course id + teacher id
             cal.add_component(event)
+
+    # write to ics
     with open('test.ics', 'wb') as f:
         f.write(cal.to_ical())
+
 if __name__ == '__main__':
     main()
