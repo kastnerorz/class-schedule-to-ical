@@ -16,8 +16,7 @@ password = ''
 year = 2018
 month = 3
 day = 25
-term_start_date = datetime.datetime(year,month,day,8,0)
-
+term_start_date = datetime.datetime(year, month, day, 8, 0, tzinfo=pytz.timezone('Asia/Shanghai'))
 
 def login(session):
     url_captcha = url_index + '/Login/GetValidateCode?%20%20+%20GetTimestamp()'
@@ -127,7 +126,7 @@ def main():
     #            'AppleWebKit/537.36 (KHTML, like Gecko)'
     #            'Chrome/63.0.3239.132 Safari/537.36'
     #            }
-
+    #
     # req = requests.Session()
     # while not login(req):
     #     print(u'login failed')
@@ -140,6 +139,8 @@ def main():
     with open('test.txt', 'rb') as f:
         data = f.read().decode('utf-8')
         soup = BeautifulSoup(data, "html.parser")
+
+
     course_table = soup.table
     course_trs = course_table.find_all('tr')
 
@@ -158,7 +159,7 @@ def main():
             event.add('summary', tds[2].text.replace("\n", "").replace(" ", ""))                            # course name
             event.add('dtstart', time['start_time'])                # course start time
             event.add('dtend', time['end_time'])                    # course end time
-            event.add('dtstamp', datetime.datetime.now())           # course edit time
+            event.add('dtstamp', datetime.datetime.now(tz=pytz.timezone('Asia/Shanghai')))           # course edit time
             event['location'] = vText(tds[7].text.replace("\n", "").replace(" ", ""))                   # course location
             event['uid'] = vText(tds[1].text.replace("\n", "").replace(" ", "") +
                                  tds[3].text.replace("\n", "").replace(" ", "") +
