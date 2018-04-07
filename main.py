@@ -121,24 +121,24 @@ def string_to_time(course_time):    # '二1-2 三3-4'
 
 
 def main():
-    # headers = {'user-agent',
-    #            'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-    #            'AppleWebKit/537.36 (KHTML, like Gecko)'
-    #            'Chrome/63.0.3239.132 Safari/537.36'
-    #            }
-    #
-    # req = requests.Session()
-    # while not login(req):
-    #     print(u'login failed')
-    # course_req_post_data = {'studentNo': username}
-    # course_req_result = req.post(url_index + '/StudentQuery/CtrlViewQueryCourseTable', course_req_post_data)
-    # print(course_req_result.text)
-    # soup = BeautifulSoup(course_req_result.text, "html.parser")
+    headers = {'user-agent',
+               'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+               'AppleWebKit/537.36 (KHTML, like Gecko)'
+               'Chrome/63.0.3239.132 Safari/537.36'
+               }
 
-    # use local text
-    with open('test.txt', 'rb') as f:
-        data = f.read().decode('utf-8')
-        soup = BeautifulSoup(data, "html.parser")
+    req = requests.Session()
+    while not login(req):
+        print(u'login failed')
+    course_req_post_data = {'studentNo': username}
+    course_req_result = req.post(url_index + '/StudentQuery/CtrlViewQueryCourseTable', course_req_post_data)
+    print(course_req_result.text)
+    soup = BeautifulSoup(course_req_result.text, "html.parser")
+
+    # # use local text
+    # with open('test.txt', 'rb') as f:
+    #     data = f.read().decode('utf-8')
+    #     soup = BeautifulSoup(data, "html.parser")
 
 
     course_table = soup.table
@@ -156,13 +156,13 @@ def main():
         course_times = string_to_time(tds[6].text)
         for index, time in enumerate(course_times):
             event = Event()
-            event.add('summary', tds[2].text.replace("\n", "").replace(" ", ""))                            # course name
+            event.add('summary', tds[2].text.replace("\n", "").strip())                            # course name
             event.add('dtstart', time['start_time'])                # course start time
             event.add('dtend', time['end_time'])                    # course end time
             event.add('dtstamp', datetime.datetime.now(tz=pytz.timezone('Asia/Shanghai')))           # course edit time
-            event['location'] = vText(tds[7].text.replace("\n", "").replace(" ", ""))                   # course location
-            event['uid'] = vText(tds[1].text.replace("\n", "").replace(" ", "") +
-                                 tds[3].text.replace("\n", "").replace(" ", "") +
+            event['location'] = vText(tds[7].text.replace("\n", "").strip())                   # course location
+            event['uid'] = vText(tds[1].text.replace("\n", "").strip() +
+                                 tds[3].text.replace("\n", "").strip() +
                                  str(index))                      # course id + teacher id
             cal.add_component(event)
 
