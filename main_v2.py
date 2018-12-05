@@ -9,9 +9,11 @@ from icalendar import Calendar, Event, vText
 # config
 url = ['http://xk.autoisp.shu.edu.cn:8080', 'http://xk.autoisp.shu.edu.cn']
 url_index = url[1]  # i = 0 or 1
-username = 'YOUR_ID'
-password = 'YOUR_PASSWORD'
-year = 2018, month = 11, day = 26  # term start date (Monday)
+username = ''
+password = ''
+year = 2018
+month = 11
+day = 26  # term start date (Monday)
 
 term_start_date = datetime.datetime(year, month, day - 1, 8, 0, tzinfo=pytz.timezone('Asia/Shanghai'))
 
