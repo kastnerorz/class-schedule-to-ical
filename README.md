@@ -15,11 +15,18 @@ git clone git@github.com:kastnerorz/class-schedule-to-ical.git
 cd class-schedule-to-ical
 pipenv install
 ```
-
-4. Run
+4. Set the params.
+```python
+url_index = url[i]  # i = 0 or 1
+username = 'YOUR_ID'
+password = 'YOUR_PASSWORD'
+year = 2018, month = 11, day = 26 # term start date (Monday)
+```
+5. Run
 
 ```bash
-pipenv run main_v2.py
+pipenv run python main_v2.py
 ```
 
-5. Import the `class_schedule.ics` to your calendar app.
+6. Import the `class_schedule.ics` to your calendar app.
+7. Enjoy it!
