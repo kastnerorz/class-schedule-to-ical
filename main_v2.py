@@ -1,55 +1,59 @@
-import requests
-from icalendar import Calendar, Event, vText
 import datetime
-import pytz
-import json
 import re
-from bs4 import BeautifulSoup
-import tempfile, os
 
-url = ['http://xk.shu.edu.cn:8080', 'http://xk.shu.edu.cn']
-url_index = url[0]
-username = '16122131'
-password = 'Gmr1998'
+import pytz
+import requests
+from bs4 import BeautifulSoup
+from icalendar import Calendar, Event, vText
+
+# config
+url = ['http://xk.autoisp.shu.edu.cn:8080', 'http://xk.autoisp.shu.edu.cn']
+url_index = url[1]
+username = '16122038'
+password = 'Dicos.123'
 year = 2018
-month = 9
-day = 2
+month = 11
+day = 25
 term_start_date = datetime.datetime(year, month, day, 8, 0, tzinfo=pytz.timezone('Asia/Shanghai'))
 
 
 def login(session):
-    url_captcha = url_index + '/Login/GetValidateCode?%20%20+%20GetTimestamp()'
-    captcha_bin = session.get(url_captcha).content
-    captcha_post_data = {'captcha': ('captcha.jpg', captcha_bin, 'image/jpeg')}
-    captcha_session = requests.session()
-    try:
-        captcha_req_result = captcha_session.post('http://shuhelper.cn:8001/jwc',
-                                                  files=captcha_post_data,
-                                                  timeout=10)
-        captcha_text = captcha_req_result.json()['result']
-    except:
-        print(u'获取验证码失败')
-        captcha_session.keep_alive = False
-        print(u'close captcha session...')
-        return False
-    login_data = {
-        'txtUserName': username,
-        'txtPassword': password,
-        'txtValiCode': captcha_text
+    # authorize
+    authorize_r = requests.get(
+        'https://oauth.shu.edu.cn/oauth/authorize?response_type=code&client_id=yRQLJfUsx326fSeKNUCtooKw&redirect_uri=http%3a%2f%2fxk.autoisp.shu.edu.cn%2fpassport%2freturn')
+    soup = BeautifulSoup(authorize_r.text, "html.parser")
+    saml_request = soup.find_all(attrs={'name': 'SAMLRequest'})[0]['value']
+    relay_state = soup.find_all(attrs={'name': 'RelayState'})[0]['value']
+
+    # SSO
+    sso_data = {
+        'SAMLRequest': saml_request,
+        'RelayState': relay_state
     }
-    print(u'正在登录...')
-    ReqLogin = session.post(url_index, login_data)
-    Result = re.findall(u'divLoginAlert">\r\n\s*(.*?)\r\n', ReqLogin.text)
+    session.post('https://sso.shu.edu.cn/idp/profile/SAML2/POST/SSO',
+                 data=sso_data)
+
+    # UserPassword
+    user_password_data = {
+        'j_username': username,
+        'j_password': password
+    }
+    user_password_r = session.post('https://sso.shu.edu.cn/idp/Authn/UserPassword',
+                                   cookies=session.cookies,
+                                   data=user_password_data)
+    soup = BeautifulSoup(user_password_r.text, 'html.parser')
+    relay_state = soup.find_all(attrs={'name': 'RelayState'})[0]['value']
+    saml_response = soup.find_all(attrs={'name': 'SAMLResponse'})[0]['value']
+
+    # POST
+    post_data = {
+        'RelayState': relay_state,
+        'SAMLResponse': saml_response
+    }
+    post_r = session.post('http://oauth.shu.edu.cn/oauth/Shibboleth.sso/SAML2/POST',
+                          data=post_data)
+    Result = re.findall(u'divLoginAlert">\r\n\s*(.*?)\r\n', post_r.text)
     if not Result:
-        # try:
-        #     Semester = re.findall(u'<font color="red">(.*?)<', ReqLogin.content)[0]
-        #     LoginInfo = re.findall(u'23px;">\r\n\s*(.*?)：(.*?)\r\n', ReqLogin.text)
-        # except:
-        #     print(u'[get semester info error]')
-        #     return False
-        # print('%s' % Semester)
-        # for info in LoginInfo:
-        #     print('%s:%s' % info)
         print(u'登录成功!')
         return True
     else:
@@ -121,18 +125,14 @@ def string_to_time(course_time):  # '二1-2 三3-4'
 
 
 def main():
-    headers = {'user-agent',
-               'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-               'AppleWebKit/537.36 (KHTML, like Gecko)'
-               'Chrome/63.0.3239.132 Safari/537.36'
-               }
-
+    # login
     req = requests.Session()
     while not login(req):
         print(u'login failed')
+
+    print('正在处理...')
     course_req_post_data = {'studentNo': username}
     course_req_result = req.post(url_index + '/StudentQuery/CtrlViewQueryCourseTable', course_req_post_data)
-    print(course_req_result.text)
     soup = BeautifulSoup(course_req_result.text, "html.parser")
 
     course_table = soup.table
@@ -162,7 +162,7 @@ def main():
     # write to ics
     with open('class_schedule.ics', 'wb') as f:
         f.write(cal.to_ical())
-
+    print('输出成功！请将 `class_schedule.ics` 文件导入到日历。')
 
 if __name__ == '__main__':
     main()
