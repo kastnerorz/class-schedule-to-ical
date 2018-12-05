@@ -9,8 +9,8 @@ from icalendar import Calendar, Event, vText
 # config
 url = ['http://xk.autoisp.shu.edu.cn:8080', 'http://xk.autoisp.shu.edu.cn']
 url_index = url[1]
-username = '16122038'
-password = 'Dicos.123'
+username = ''
+password = ''
 year = 2018
 month = 11
 day = 25
