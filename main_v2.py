@@ -7,13 +7,15 @@ from bs4 import BeautifulSoup
 from icalendar import Calendar, Event, vText
 
 # config
+sem = 0  # i = 0 or 1
 url = ['http://xk.autoisp.shu.edu.cn:8080', 'http://xk.autoisp.shu.edu.cn']
-url_index = url[1]  # i = 0 or 1
+url_index = url[sem]
+url_encode = '%3a8080' if sem == 0 else ''
 username = ''
 password = ''
-year = 2018
-month = 11
-day = 26  # term start date (Monday)
+year = 2019
+month = 3
+day = 25  # term start date (Monday)
 
 term_start_date = datetime.datetime(year, month, day - 1, 8, 0, tzinfo=pytz.timezone('Asia/Shanghai'))
 
@@ -21,7 +23,7 @@ term_start_date = datetime.datetime(year, month, day - 1, 8, 0, tzinfo=pytz.time
 def login(session):
     # authorize
     authorize_r = requests.get(
-        'https://oauth.shu.edu.cn/oauth/authorize?response_type=code&client_id=yRQLJfUsx326fSeKNUCtooKw&redirect_uri=http%3a%2f%2fxk.autoisp.shu.edu.cn%2fpassport%2freturn')
+        'https://oauth.shu.edu.cn/oauth/authorize?response_type=code&client_id=yRQLJfUsx326fSeKNUCtooKw&redirect_uri=http%3a%2f%2fxk.autoisp.shu.edu.cn' + url_encode + '%2fpassport%2freturn')
     soup = BeautifulSoup(authorize_r.text, "html.parser")
     saml_request = soup.find_all(attrs={'name': 'SAMLRequest'})[0]['value']
     relay_state = soup.find_all(attrs={'name': 'RelayState'})[0]['value']
