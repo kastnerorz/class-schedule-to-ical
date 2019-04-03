@@ -1,8 +1,12 @@
-# Class Schedule to iCal
+# Class Schedule to iCal V2
 
 ## How to Use
 
 1. Install [Pipenv](https://pipenv.readthedocs.io/en/latest/install/)
+    - For Mac
+    ```bash
+    brew install pipenv
+    ```
 2. Clone the project
 
 ```bash
